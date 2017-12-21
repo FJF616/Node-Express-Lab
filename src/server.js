@@ -1,12 +1,12 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 
 const server = express();
 const STATUS_USER_ERROR = 422;
 
-let posts = [
+const posts = [
   {
-    id: Number,
     title: String,
     content: String
   }
@@ -26,47 +26,41 @@ server.use((req, res, next) => {
 //   res.json({ message: 'hooray!' });
 // });
 
-// add a post
+
+let id = 0;
 server.post('/posts', (req, res) => {
-  posts.create({
-    id: req.body.id,
-    title: req.body.title,
-    content: req.body.content
-  },
-        (err, post) => {
-          if (err) return res.status(500).send('There was a problem adding the information to the database.');
-          res.status(200).send(post);
-        });
+  if (!req.body.title && !req.body.contents) res.status(422).json({ error: 'Error message' });
+  posts.push(Number(id++));
+  res.status(201).json({ posts: id });
 });
-// get all posts
-server.get('/posts', (req, res) => {
-  posts.find({}, (err, post) => {
-    if (err) return res.status(422).send('error');
-    res.status(201).send(posts);
-  });
+
+
+server.get('/posts/:term?', (req, res) => {
+  const term = req.params.term;
+  const hasTerm = function (item) {
+    if ((posts.title === term && posts.contents === term) || (posts.title === term || posts.contents === term)) return true;
+  };
+  const newArr = posts.filter(hasTerm(term));
+  res.status(200).json({ newArr });
 });
-// get single post
-server.get('/posts/:id', (req, res) => {
-  posts.find(req.params.id, (err, post) => {
-    if (err) return res.status(500).send('There was a problem finding the post.');
-    if (!post) return res.status(404).send('No post found.');
-    res.status(200).send(post);
-  });
+
+server.get('*', (req, res) => {
+  res.status(201).json({ posts });
 });
 // delete
-server.delete('/posts/:id', (req, res) => {
+server.delete('/posts/:id?', (req, res) => {
   posts.find(req.params.id, (err, user) => {
     if (err) return res.status(500).send('There was a problem deleting the user.');
     res.status(200).send(`post ${posts.id} was deleted.`);
   });
 });
 // update
-server.put('/posts/:id', (req, res) => {
-  posts.find(req.params.id, req.body, { new: true }, (err, post) => {
-    if (err) return res.status(500).send('There was a problem updating the post.');
-    res.status(200).send(post);
-  });
+server.put('/posts/:id?/:title?/:content?', (req, res) => {
+  const modPost = req.body;
+
+  if (!(id in posts)) res.status(422).json({ error: 'Error message' });
+  posts.push(modPost);
+  fs.appendFile('posts.json', JSON.stringify(modPost));
+  res.status(201).json({ posts });
 });
-
-
 module.exports = { server };
