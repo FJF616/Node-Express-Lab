@@ -4,7 +4,7 @@ const bodyParser = require('body-parser');
 const server = express();
 const STATUS_USER_ERROR = 422;
 
-const posts = [
+let posts = [
   {
     id: Number,
     title: String,
@@ -25,6 +25,8 @@ server.use((req, res, next) => {
 // server.get('/posts', (req, res) => {
 //   res.json({ message: 'hooray!' });
 // });
+
+// add a post
 server.post('/posts', (req, res) => {
   posts.create({
     id: req.body.id,
@@ -36,12 +38,14 @@ server.post('/posts', (req, res) => {
           res.status(200).send(post);
         });
 });
+// get all posts
 server.get('/posts', (req, res) => {
   posts.find({}, (err, post) => {
     if (err) return res.status(422).send('error');
     res.status(201).send(posts);
   });
 });
+// get single post
 server.get('/posts/:id', (req, res) => {
   posts.find(req.params.id, (err, post) => {
     if (err) return res.status(500).send('There was a problem finding the post.');
@@ -49,12 +53,14 @@ server.get('/posts/:id', (req, res) => {
     res.status(200).send(post);
   });
 });
+// delete
 server.delete('/posts/:id', (req, res) => {
   posts.find(req.params.id, (err, user) => {
     if (err) return res.status(500).send('There was a problem deleting the user.');
     res.status(200).send(`post ${posts.id} was deleted.`);
   });
 });
+// update
 server.put('/posts/:id', (req, res) => {
   posts.find(req.params.id, req.body, { new: true }, (err, post) => {
     if (err) return res.status(500).send('There was a problem updating the post.');
